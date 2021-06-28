@@ -118,6 +118,7 @@ def findCards(API_KEY, OAUTH_TOKEN, list_id, list_name=None):
     get_cards_url = f"https://api.trello.com/1/lists/{list_id}/cards?key={API_KEY}&token={OAUTH_TOKEN}&response_type=token"
 
     list_of_all_cards = []
+    list_of_rec_complete_cards = []
 
     r = requests.get(get_cards_url)
 
@@ -169,9 +170,17 @@ def findCards(API_KEY, OAUTH_TOKEN, list_id, list_name=None):
                 card_last_activity = datetime.strptime(card_last_activity, "%d/%m/%Y").date()
             elif key == "desc":
                 card_desc = value
-        if len(list_of_comments) > 1:
-            list_of_all_cards.append([card_name, list_of_labels, list_of_members, card_start, card_due, card_complete, card_last_activity, list_of_comments[0]])
+        if "Complete" in list_of_labels or card_complete == "Yes":
+            if len(list_of_comments) > 1:
+                list_of_rec_complete_cards.append([card_name, list_of_members, card_due, list_of_comments[0]])
+            else:
+                list_of_rec_complete_cards.append([card_name, list_of_members, card_due, list_of_comments])
         else:
-            list_of_all_cards.append([card_name, list_of_labels, list_of_members, card_start, card_due, card_complete, card_last_activity, list_of_comments])
+            if len(list_of_comments) > 1:
+                list_of_all_cards.append([card_name, list_of_labels, list_of_members, card_start, card_due, card_complete, card_last_activity, list_of_comments[0]])
+            else:
+                list_of_all_cards.append([card_name, list_of_labels, list_of_members, card_start, card_due, card_complete, card_last_activity, list_of_comments])
     if len(list_of_all_cards) > 0:
         return list_of_all_cards
+    if len(list_of_rec_complete_cards) > 0:
+        return list_of_rec_complete_cards

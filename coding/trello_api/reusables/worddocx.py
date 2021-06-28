@@ -1,3 +1,4 @@
+import arrow
 import docx
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.enum.text import WD_COLOR_INDEX
@@ -23,7 +24,7 @@ def convertFullDatetimetoDatetime(date, date_format):
             # print(f"ARROW formatted DATETIME: {new_date}")
             # print(type(new_date))
             return new_date
-        except:
+        except Exception:
             print(f"Something went wrong converting {date}!")
     else:
         print(f"None value was supplied. Moving onto next date...")
@@ -42,7 +43,7 @@ def convertFullDatetimetoString(date, date_format):
             # print(f"DATETIME formatted to STRING: {new_date}")
             # print(type(new_date))
             return new_date
-        except:
+        except Exception:
             print(f"Something went wrong converting {date}!")
     else:
         print(f"None value was supplied. Moving onto next date...")
@@ -261,7 +262,7 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
                     rowrun = rowparagraph.runs
                     rowfont = rowrun[0].font
                     rowfont.bold = False
-        except:
+        except Exception:
             print("There are no 'Recently Complete' cards.")
             row_Cells = rcTable.add_row().cells
             row_Cells[0].text = "N/A"
@@ -415,7 +416,7 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
         # Save new file
         doc.save(outputLoc + "Testing Weekly Report " + newtoday.replace("/", "") + '.docx')
         print("Your report has been created")
-    except:
+    except Exception:
         print("WOAH something terrible has happened and I can't tell you where!!!!!")
 
 
