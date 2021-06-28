@@ -13,6 +13,51 @@ from docx.oxml.ns import qn
 
 
 # REPORT CREATION METHODS
+# Convert full datetime format to arrow datetime
+def convertFullDatetimetoDatetime(date, date_format):
+    if date is not None:
+        # print(f"Starting format is: {date}")
+        # print(type(date))
+        try:
+            new_date = arrow.get(date)
+            # print(f"ARROW formatted DATETIME: {new_date}")
+            # print(type(new_date))
+            return new_date
+        except:
+            print(f"Something went wrong converting {date}!")
+    else:
+        print(f"None value was supplied. Moving onto next date...")
+
+
+# Convert full datetime format to string for report
+def convertFullDatetimetoString(date, date_format):
+    if date is not None:
+        # print(f"Starting format is: {date}")
+        # print(type(date))
+        try:
+            new_date = arrow.get(date)
+            # print(f"ARROW formatted DATETIME: {new_date}")
+            # print(type(new_date))
+            new_date = new_date.strftime(date_format)
+            # print(f"DATETIME formatted to STRING: {new_date}")
+            # print(type(new_date))
+            return new_date
+        except:
+            print(f"Something went wrong converting {date}!")
+    else:
+        print(f"None value was supplied. Moving onto next date...")
+
+
+# Is date 1 greater than date 2?
+def isDateGreaterThanOtherDate(date1, date2):
+    if date1 > date2:
+        print(f"{date1} is greater than {date2}")
+        return True
+    else:
+        print(f"{date1} is NOT greater than {date2}")
+        return False
+
+
 # Intersperse method is used to add a "/" in between card members if there is more than one
 def intersperse(lst, item):
     result = [item] * (len(lst) * 2 - 1)
