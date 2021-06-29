@@ -3,7 +3,6 @@ import arrow  # pip install arrow
 import datetime  # comes with normal python so no need to install
 from datetime import datetime
 
-
 # Interrogates TRELLO to find your board
 def findBoard(API_KEY, OAUTH_TOKEN, BOARD_NAME=None):
     get_boards_url = "https://api.trello.com/1/members/me/boards?key=" + API_KEY + "&token=" + OAUTH_TOKEN + "&response_type=token"
@@ -172,15 +171,13 @@ def findCards(API_KEY, OAUTH_TOKEN, list_id, list_name=None):
                 card_desc = value
         if "Complete" in list_of_labels or card_complete == "Yes":
             if len(list_of_comments) > 1:
-                list_of_rec_complete_cards.append([card_name, list_of_members, card_due, list_of_comments[0]])
+                list_of_rec_complete_cards.append([card_name, list_of_labels, list_of_members, card_start, card_due, card_complete, card_last_activity, list_of_comments[0]])
             else:
-                list_of_rec_complete_cards.append([card_name, list_of_members, card_due, list_of_comments])
+                list_of_rec_complete_cards.append([card_name, list_of_labels, list_of_members, card_start, card_due, card_complete, card_last_activity, list_of_comments])
         else:
             if len(list_of_comments) > 1:
                 list_of_all_cards.append([card_name, list_of_labels, list_of_members, card_start, card_due, card_complete, card_last_activity, list_of_comments[0]])
             else:
                 list_of_all_cards.append([card_name, list_of_labels, list_of_members, card_start, card_due, card_complete, card_last_activity, list_of_comments])
     if len(list_of_all_cards) > 0:
-        return list_of_all_cards
-    if len(list_of_rec_complete_cards) > 0:
-        return list_of_rec_complete_cards
+        return list_of_all_cards, list_of_rec_complete_cards

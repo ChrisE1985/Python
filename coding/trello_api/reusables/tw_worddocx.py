@@ -1,5 +1,7 @@
 import arrow
 import docx
+import datetime  # comes with normal python so no need to install
+from datetime import datetime
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.enum.text import WD_COLOR_INDEX
 from docx.enum.section import WD_ORIENTATION
@@ -14,6 +16,14 @@ from docx.oxml.ns import qn
 
 
 # REPORT CREATION METHODS
+# Get todays date
+def getTodayDate():
+    today = arrow.now()
+    newtoday = today.strftime("%d/%m/%Y")
+    newtoday = datetime.strptime(newtoday, "%d/%m/%Y").date()
+    return newtoday
+
+
 # Convert full datetime format to arrow datetime
 def convertFullDatetimetoDatetime(date, date_format):
     if date is not None:
@@ -130,8 +140,9 @@ def applyStyle(doc, new_style_name, fontname, fontsize, color):
     obj_font.color.rgb = RGBColor.from_string(color)
 
 
-def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_cards, newtoday, templateLoc, outputLoc):
+def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_cards, templateLoc, outputLoc):
     try:
+        print("###################Generating Report...###################")
         # Open template
         doc = docx.Document(templateLoc)
 
@@ -140,12 +151,14 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
         applyStyle(doc, 'Author', 'Calibri', 14, '00B0F0')
         applyStyle(doc, 'SubHeading', 'Calibri', 16, 'FF1C60')
 
+        print("Creating Page 1...")
         # Add text to the document
+        newtoday = getTodayDate()
+        newtoday = convertFullDatetimetoString(newtoday, '%d/%m/%Y')
         title = doc.add_paragraph()
         author = doc.add_paragraph()
         toc = doc.add_paragraph()
-        titlerun = title.add_run(f'Internal Testing Report - {newtoday}',
-                                 style='TestReportTitle').bold = True
+        titlerun = title.add_run(f'Internal Testing Report - {newtoday}', style='TestReportTitle').bold = True
         authorrun = author.add_run(f'Author: Colin Denny', style='Author').bold = True
         # Align text
         title.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
@@ -156,9 +169,11 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
         # Add a page break
         doc.add_page_break()
 
+        print("Creating Page 2 - Summary In Progress...")
         # Add Summary of IP Projects
         doc.add_heading('Summary of Test Projects In Progress', 1)
 
+        print("Creating Page 2 - Summary In Progress - Table Header...")
         ipTable = doc.add_table(rows=1, cols=5)
         ipTable.style = 'Light List Accent 1'
         ipTable.allow_autofit = False
@@ -180,15 +195,16 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
             hdrfont.size = Pt(10)
             hdrfont.bold = False
             hdrfont.color.rgb = RGBColor.from_string('FFFFFF')
-        for pn, r, pd, c in full_team_cards:
+        print("Creating Page 2 - Summary In Progress - Table Body...")
+        for cn, cl, cm, cs, cd, cc, cla, c in full_team_cards:
             row_Cells = ipTable.add_row().cells
-            row_Cells[0].text = pn
+            row_Cells[0].text = cn
             row_Cells[1].text = ""
             row_Cells[2].text = ""
-            row_Cells[3].text = intersperse(r, "/")
-            row_Cells[4].text = str(pd)
+            row_Cells[3].text = intersperse(cm, "/")
+            row_Cells[4].text = str(cd)
             if row_Cells[4].text != "N/A":
-                row_Cells[4].text = pd.strftime("%d/%m/%y")
+                row_Cells[4].text = cd.strftime("%d/%m/%y")
             for cell in row_Cells:
                 set_cell_border(cell, top={"sz": 8, "val": "single", "color": "#5b9bd5", "space": "0"},
                                 bottom={"sz": 8, "val": "single", "color": "#5b9bd5", "space": "0"},
@@ -203,9 +219,11 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
         # Add a page break
         doc.add_page_break()
 
+        print("Creating Page 3 - Summary Recently Complete...")
         # Add Summary of RC Projects
         doc.add_heading('Summary of Test Projects Recently Complete', 1)
 
+        print("Creating Page 3 - Summary Recently Complete - Table Header...")
         rcTable = doc.add_table(rows=1, cols=4)
         rcTable.style = 'Light List Accent 1'
         rcTable.allow_autofit = False
@@ -227,10 +245,11 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
             hdrfont.bold = False
             hdrfont.color.rgb = RGBColor.from_string('FFFFFF')
         try:
+            print("Creating Page 3 - Summary Recently Complete - Table Body...")
             if len(rec_comp_cards) > 0:
-                for pn, c in rec_comp_cards:
+                for cn, cl, cm, cs, cd, cc, cla, c in rec_comp_cards:
                     row_Cells = rcTable.add_row().cells
-                    row_Cells[0].text = pn
+                    row_Cells[0].text = cn
                     row_Cells[1].text = "Green"
                     row_Cells[2].text = "Green"
                     row_Cells[3].text = ""
@@ -247,6 +266,7 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
                         rowfont = rowrun[0].font
                         rowfont.bold = False
             else:
+                print("There are no 'Recently Complete' cards so will add empty table with N/A's.")
                 row_Cells = rcTable.add_row().cells
                 row_Cells[0].text = "N/A"
                 row_Cells[1].text = "N/A"
@@ -263,26 +283,12 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
                     rowfont = rowrun[0].font
                     rowfont.bold = False
         except Exception:
-            print("There are no 'Recently Complete' cards.")
-            row_Cells = rcTable.add_row().cells
-            row_Cells[0].text = "N/A"
-            row_Cells[1].text = "N/A"
-            row_Cells[2].text = "N/A"
-            row_Cells[3].text = "N/A"
-            for cell in row_Cells:
-                set_cell_border(cell, top={"sz": 8, "val": "single", "color": "#5b9bd5", "space": "0"},
-                                bottom={"sz": 8, "val": "single", "color": "#5b9bd5", "space": "0"},
-                                start={"sz": 8, "val": "single", "color": "#000000", "space": "0"},
-                                end={"sz": 8, "val": "single", "color": "#000000", "space": "0"},
-                                insideH={"sz": 8, "val": "single", "color": "#5b9bd5", "space": "0"})
-                rowparagraph = cell.paragraphs[0]
-                rowrun = rowparagraph.runs
-                rowfont = rowrun[0].font
-                rowfont.bold = False
+            print("Something went wrong trying to add recently complete table")
 
         # Add a page break
         doc.add_page_break()
 
+        print("Creating Page 4 - Project Commentary...")
         # Add Summary of Commentary
         doc.add_heading('Project Commentary', 1)
         doc.add_heading("Projects In Progress", level=2)
@@ -291,8 +297,8 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
         unordered = "1"
         for ftcard in full_team_cards:
             doc.add_heading(ftcard[0], 3)
-            listTodayComment = ftcard[3]
-            pip = doc.add_paragraph(listTodayComment[0], style='List Bullet 2')
+            listTodayComment = ftcard[7]
+            pip = doc.add_paragraph(listTodayComment, style='List Bullet 2')
 
         blankpara = doc.add_paragraph()
 
@@ -300,7 +306,7 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
         if len(rec_comp_cards) > 0:
             for reccard in rec_comp_cards:
                 doc.add_heading(reccard[0], 3)
-                listTodayComment = reccard[1]
+                listTodayComment = reccard[7]
                 pip = doc.add_paragraph(listTodayComment, style='List Bullet 2')
         else:
             doc.add_paragraph("There are no recently complete projects.", style='List Bullet 2')
@@ -308,6 +314,7 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
         # Add a page break
         doc.add_page_break()
 
+        print("Creating Page 5 - Future Approved/Imminent...")
         # Add Summary of Commentary
         doc.add_heading('Future Testing Activities', 1)
         doc.add_heading('Approved / Imminent', 2)
@@ -332,18 +339,16 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
             hdrfont.size = Pt(10)
             hdrfont.bold = False
             hdrfont.color.rgb = RGBColor.from_string('FFFFFF')
-        for pn, ps, pd, c in full_app_cards:
+        for cn, cl, cm, cs, cd, cc, cla, c in full_app_cards:
             row_Cells = appTable.add_row().cells
-            row_Cells[0].text = pn
-            row_Cells[1].text = str(ps)
-            row_Cells[2].text = str(pd)
-            row_Cells[3].text = str(c)
-            if row_Cells[1].text != "TBC":
-                row_Cells[1].text = pd.strftime("%d/%m/%y")
-            if row_Cells[2].text != "TBC":
-                row_Cells[2].text = pd.strftime("%d/%m/%y")
-            if row_Cells[3].text is not None:
-                row_Cells[3].text = c
+            row_Cells[0].text = cn
+            row_Cells[1].text = "TBC"
+            row_Cells[2].text = "TBC"
+            row_Cells[3].text = cl
+            if cs != "N/A":
+                row_Cells[1].text = convertFullDatetimetoString(cs, "%d/%m/%y")
+            if cd != "N/A":
+                row_Cells[2].text = convertFullDatetimetoString(cd, "%d/%m/%y")
             for cell in row_Cells:
                 set_cell_border(cell, top={"sz": 8, "val": "single", "color": "#5b9bd5", "space": "0"},
                                 bottom={"sz": 8, "val": "single", "color": "#5b9bd5", "space": "0"},
@@ -357,6 +362,7 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
         # Add a page break
         doc.add_page_break()
 
+        print("Creating Page 6 - Future Incoming...")
         doc.add_heading('Incoming / Probable / Potential', 2)
 
         inTable = doc.add_table(rows=1, cols=4)
@@ -379,18 +385,16 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
             hdrfont.size = Pt(10)
             hdrfont.bold = False
             hdrfont.color.rgb = RGBColor.from_string('FFFFFF')
-        for pn, ps, pd, c in full_in_cards:
+        for cn, cl, cm, cs, cd, cc, cla, c in full_in_cards:
             row_Cells = inTable.add_row().cells
-            row_Cells[0].text = pn
-            row_Cells[1].text = str(ps)
-            row_Cells[2].text = str(pd)
-            row_Cells[3].text = str(c)
-            if row_Cells[1].text != "TBC":
-                row_Cells[1].text = ps.strftime("%d/%m/%y")
-            if row_Cells[2].text != "TBC":
-                row_Cells[2].text = pd.strftime("%d/%m/%y")
-            if row_Cells[3].text is not None:
-                row_Cells[3].text = c
+            row_Cells[0].text = cn
+            row_Cells[1].text = "TBC"
+            row_Cells[2].text = "TBC"
+            row_Cells[3].text = cl
+            if cs != "N/A":
+                row_Cells[1].text = convertFullDatetimetoString(cs, "%d/%m/%y")
+            if cd != "N/A":
+                row_Cells[2].text = convertFullDatetimetoString(cd, "%d/%m/%y")
             for cell in row_Cells:
                 set_cell_border(cell, top={"sz": 8, "val": "single", "color": "#5b9bd5", "space": "0"},
                                 bottom={"sz": 8, "val": "single", "color": "#5b9bd5", "space": "0"},
@@ -404,6 +408,7 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
         # Add a page break
         doc.add_page_break()
 
+        print("Creating Page 7 - Other News...")
         # Add Summary of Commentary
         doc.add_heading('Other News', 1)
         doc.add_heading('Approaching Holidays', 2)
@@ -414,15 +419,7 @@ def generateWordDoc(full_team_cards, rec_comp_cards, full_app_cards, full_in_car
         apr = doc.add_paragraph('N/A', style='List Bullet 2')
 
         # Save new file
-        doc.save(outputLoc + "Testing Weekly Report " + newtoday.replace("/", "") + '.docx')
+        doc.save(outputLoc + "Testing Weekly Report " + newtoday.replace("/", "") + ".docx")
         print("Your report has been created")
     except Exception:
-        print("WOAH something terrible has happened and I can't tell you where!!!!!")
-
-
-def createreport(templateLoc, outputLoc, days):
-
-    # REPORT VARIABLES ################################################
-    # REPORT VARIABLES ################################################
-    entered_days = days
-    print(f"Your report will look back '{entered_days}' days to return the 'Recently Complete' cards")
+        print("WOAH something went wrong. Check the latest print statement to find the last action before failure!!!!!")
